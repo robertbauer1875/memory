@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>BAUER🌸</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Game 🌸</title>
 <style>
   body {
     background: radial-gradient(circle at top, #0f2027, #203a43, #2c5364);
@@ -40,7 +40,7 @@
   .card {
     width: 70px;
     height: 70px;
-    background: green;
+    background: #1b2b34;
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -91,12 +91,17 @@
 </style>
 </head>
 <body>
-  <h1>🌸 BAUER 🌸</h1>
-  <div id="stats">
-    Score: <span id="score">0</span> | Record: <span id="record">0</span>
-  </div>
-  <div id="game"></div>
-  <button onclick="newGame()">New Game</button>
+
+<h1>🌸 Memory Game 🌸</h1>
+<div id="stats">
+  Score: <span id="score">0</span> | Record: <span id="record">0</span>
+</div>
+<div id="game"></div>
+<button onclick="newGame()">New Game</button>
+
+<!-- Audio -->
+<audio id="clickSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+<audio id="matchSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
 
 <script>
 const flowers = ['🌷','🌸','🌹','🌻','🌼','🌺','🌾','🥀'];
@@ -109,6 +114,9 @@ let record = localStorage.getItem('flowerRecord') || 0;
 
 document.getElementById('record').textContent = record;
 
+const clickSound = document.getElementById('clickSound');
+const matchSound = document.getElementById('matchSound');
+
 function newGame() {
   const game = document.getElementById('game');
   game.innerHTML = '';
@@ -117,6 +125,9 @@ function newGame() {
   score = 0;
   document.getElementById('score').textContent = score;
   document.getElementById('record').style.textShadow = 'none';
+  first = null;
+  second = null;
+  lock = false;
 
   emojis.forEach((emoji, i) => {
     const card = document.createElement('div');
@@ -130,8 +141,13 @@ function newGame() {
 
 function flipCard(card) {
   if (lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
   card.classList.add('flipped');
   card.textContent = card.dataset.value;
+
+  // Play click sound
+  clickSound.currentTime = 0;
+  clickSound.play();
 
   if (!first) {
     first = card;
@@ -147,6 +163,10 @@ function checkMatch() {
     first.classList.add('matched');
     second.classList.add('matched');
     score += 10;
+
+    // Play match sound
+    matchSound.currentTime = 0;
+    matchSound.play();
   } else {
     first.textContent = '';
     second.textContent = '';
@@ -170,6 +190,7 @@ function checkMatch() {
   }
 }
 
+// Start the game on load
 newGame();
 </script>
 </body>
