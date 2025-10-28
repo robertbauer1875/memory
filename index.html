@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BAUER🌸</title>
+<style>
+  body {
+    background: radial-gradient(circle at top, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  h1 {
+    margin: 20px 0 10px;
+    color: #ff7ae0;
+    text-shadow: 0 0 10px #ff7ae0;
+  }
+
+  #stats {
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  #game {
+    display: grid;
+    grid-template-columns: repeat(4, 70px);
+    grid-template-rows: repeat(4, 70px);
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .card {
+    width: 70px;
+    height: 70px;
+    background: green;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 35px;
+    cursor: pointer;
+    transition: transform 0.3s, background 0.3s;
+  }
+
+  .flipped, .matched {
+    background: #ff7ae0;
+    transform: scale(1.05);
+  }
+
+  button {
+    margin-top: 15px;
+    background: #ff7ae0;
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-weight: bold;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  button:hover {
+    background: #ff9eea;
+  }
+
+  #record {
+    color: #ffd700;
+    font-weight: bold;
+  }
+
+  @media (max-width: 600px) {
+    #game {
+      grid-template-columns: repeat(4, 60px);
+      grid-template-rows: repeat(4, 60px);
+      gap: 8px;
+    }
+    .card {
+      width: 60px;
+      height: 60px;
+      font-size: 30px;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>🌸 BAUER 🌸</h1>
+  <div id="stats">
+    Score: <span id="score">0</span> | Record: <span id="record">0</span>
+  </div>
+  <div id="game"></div>
+  <button onclick="newGame()">New Game</button>
+
+<script>
+const flowers = ['🌷','🌸','🌹','🌻','🌼','🌺','🌾','🥀'];
+let cards = [];
+let first = null;
+let second = null;
+let lock = false;
+let score = 0;
+let record = localStorage.getItem('flowerRecord') || 0;
+
+document.getElementById('record').textContent = record;
+
+function newGame() {
+  const game = document.getElementById('game');
+  game.innerHTML = '';
+  const emojis = [...flowers, ...flowers].sort(() => Math.random() - 0.5);
+  cards = [];
+  score = 0;
+  document.getElementById('score').textContent = score;
+  document.getElementById('record').style.textShadow = 'none';
+
+  emojis.forEach((emoji, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.value = emoji;
+    card.addEventListener('click', () => flipCard(card));
+    game.appendChild(card);
+    cards.push(card);
+  });
+}
+
+function flipCard(card) {
+  if (lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  card.classList.add('flipped');
+  card.textContent = card.dataset.value;
+
+  if (!first) {
+    first = card;
+  } else {
+    second = card;
+    lock = true;
+    setTimeout(checkMatch, 600);
+  }
+}
+
+function checkMatch() {
+  if (first.dataset.value === second.dataset.value) {
+    first.classList.add('matched');
+    second.classList.add('matched');
+    score += 10;
+  } else {
+    first.textContent = '';
+    second.textContent = '';
+    first.classList.remove('flipped');
+    second.classList.remove('flipped');
+    score -= 2;
+  }
+
+  document.getElementById('score').textContent = score;
+  first = null;
+  second = null;
+  lock = false;
+
+  if (cards.every(c => c.classList.contains('matched'))) {
+    if (score > record) {
+      record = score;
+      localStorage.setItem('flowerRecord', record);
+      document.getElementById('record').textContent = record;
+      document.getElementById('record').style.textShadow = '0 0 10px #ffd700';
+    }
+  }
+}
+
+newGame();
+</script>
+</body>
+</html>
