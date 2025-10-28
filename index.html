@@ -3,195 +3,170 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BAUER 🌸</title>
+<title>Bauer 🌸</title>
 <style>
-  body {
-    background: radial-gradient(circle at top, #0f2027, #203a43, #2c5364);
-    color: #fff;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-
-  h1 {
-    margin: 20px 0 10px;
-    color: #ff7ae0;
-    text-shadow: 0 0 10px #ff7ae0;
-  }
-
-  #stats {
-    font-size: 16px;
-    margin-bottom: 10px;
-    text-align: center;
-  }
-
-  #game {
-    display: grid;
-    grid-template-columns: repeat(4, 70px);
-    grid-template-rows: repeat(4, 70px);
-    gap: 10px;
-    justify-content: center;
-    margin-top: 10px;
-  }
-
-  .card {
-    width: 70px;
-    height: 70px;
-    background: green;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 35px;
-    cursor: pointer;
-    transition: transform 0.3s, background 0.3s;
-  }
-
-  .flipped, .matched {
-    background: #ff7ae0;
-    transform: scale(1.05);
-  }
-
-  button {
-    margin-top: 15px;
-    background: #ff7ae0;
-    border: none;
-    border-radius: 8px;
-    color: #000;
-    font-weight: bold;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-size: 16px;
-  }
-
-  button:hover {
-    background: #ff9eea;
-  }
-
-  #record {
-    color: #ffd700;
-    font-weight: bold;
-  }
-
-  @media (max-width: 600px) {
-    #game {
-      grid-template-columns: repeat(4, 60px);
-      grid-template-rows: repeat(4, 60px);
-      gap: 8px;
-    }
-    .card {
-      width: 60px;
-      height: 60px;
-      font-size: 30px;
-    }
-  }
+body {
+  font-family: Arial, sans-serif;
+  background:#0f2027;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin:0;
+  min-height:100vh;
+}
+h1{ margin:20px 0; color:#ff7ae0; }
+#stats{ margin-bottom:10px; }
+#game{
+  display:grid;
+  grid-template-columns:repeat(5,70px);
+  grid-template-rows:repeat(5,70px);
+  gap:4px;
+}
+.card{
+  width:70px;
+  height:70px;
+  background:#1b2b34;
+  border-radius:5px;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition: transform .3s;
+}
+.card.flipped, .card.matched{
+  transform: scale(1.05);
+}
+.card-inner{
+  width:100%;
+  height:100%;
+  position:absolute;
+  top:0;
+  left:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+}
+.card-back{
+  width:100%;
+  height:100%;
+  position:absolute;
+  top:0;
+  left:0;
+  background-image:url('poza.jpg'); /* your picture */
+  background-size: 350px 350px; /* 5x5 grid, 70x70px per card */
+  display:block;
+}
+button{
+  margin-top:15px;
+  padding:10px 15px;
+  font-size:16px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  background:#ff7ae0;
+  color:#000;
+}
+@media(max-width:600px){
+  #game{ grid-template-columns:repeat(5,50px); grid-template-rows:repeat(5,50px); gap:3px; }
+  .card{ width:50px; height:50px; }
+  .card-back{ background-size:250px 250px; }
+}
 </style>
 </head>
 <body>
 
 <h1>🌸 BAUER 🌸</h1>
-<div id="stats">
-  Score: <span id="score">0</span> | Record: <span id="record">0</span>
-</div>
+<div id="stats">Score: <span id="score">0</span> | Record: <span id="record">0</span></div>
 <div id="game"></div>
 <button onclick="newGame()">New Game</button>
 
-<!-- Audio -->
-<audio id="clickSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
-<audio id="matchSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
-
 <script>
-const flowers = ['🌷','🌸','🌹','🌻','🌼','🌺','🌾','🥀'];
-let cards = [];
-let first = null;
-let second = null;
-let lock = false;
-let score = 0;
-let record = localStorage.getItem('flowerRecord') || 0;
-
+const gridSize = 5;
+const flowers = ['🌷','🌸','🌹','🌻','🌼','🌺','🌾','🥀','🌱','🍀','🌿','🌹','🌼']; // 13 flowers, some repeated for 25 cards
+let cards = [], first=null, second=null, lock=false, score=0;
+let record = parseInt(localStorage.getItem('flowerRecord')||'0',10);
 document.getElementById('record').textContent = record;
 
-const clickSound = document.getElementById('clickSound');
-const matchSound = document.getElementById('matchSound');
+function newGame(){ startGame(); }
 
-function newGame() {
+function startGame(){
   const game = document.getElementById('game');
-  game.innerHTML = '';
-  const emojis = [...flowers, ...flowers].sort(() => Math.random() - 0.5);
-  cards = [];
-  score = 0;
+  game.innerHTML='';
+  cards=[]; score=0; first=second=null; lock=false;
   document.getElementById('score').textContent = score;
-  document.getElementById('record').style.textShadow = 'none';
-  first = null;
-  second = null;
-  lock = false;
 
-  emojis.forEach((emoji, i) => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.value = emoji;
-    card.addEventListener('click', () => flipCard(card));
-    game.appendChild(card);
-    cards.push(card);
-  });
-}
-
-function flipCard(card) {
-  if (lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
-
-  card.classList.add('flipped');
-  card.textContent = card.dataset.value;
-
-  // Play click sound
-  clickSound.currentTime = 0;
-  clickSound.play();
-
-  if (!first) {
-    first = card;
-  } else {
-    second = card;
-    lock = true;
-    setTimeout(checkMatch, 600);
+  // Shuffle flowers to create 25 cards (pairs + extra if needed)
+  let deck = [];
+  while(deck.length < gridSize*gridSize){
+    const f = flowers[Math.floor(Math.random()*flowers.length)];
+    deck.push(f);
   }
-}
+  deck = deck.concat(deck).slice(0,gridSize*gridSize).sort(()=>Math.random()-0.5);
 
-function checkMatch() {
-  if (first.dataset.value === second.dataset.value) {
-    first.classList.add('matched');
-    second.classList.add('matched');
-    score += 10;
+  for(let r=0;r<gridSize;r++){
+    for(let c=0;c<gridSize;c++){
+      const card = document.createElement('div');
+      card.className='card';
+      card.dataset.value = deck[r*gridSize+c];
 
-    // Play match sound
-    matchSound.currentTime = 0;
-    matchSound.play();
-  } else {
-    first.textContent = '';
-    second.textContent = '';
-    first.classList.remove('flipped');
-    second.classList.remove('flipped');
-    score -= 2;
-  }
+      // card back with correct part of image
+      const back = document.createElement('div');
+      back.className='card-back';
+      back.style.backgroundPosition = `-${c*70}px -${r*70}px`;
+      card.appendChild(back);
 
-  document.getElementById('score').textContent = score;
-  first = null;
-  second = null;
-  lock = false;
+      // card inner for emoji/flower
+      const inner = document.createElement('div');
+      inner.className='card-inner';
+      inner.textContent = deck[r*gridSize+c];
+      inner.style.display='none';
+      card.appendChild(inner);
 
-  if (cards.every(c => c.classList.contains('matched'))) {
-    if (score > record) {
-      record = score;
-      localStorage.setItem('flowerRecord', record);
-      document.getElementById('record').textContent = record;
-      document.getElementById('record').style.textShadow = '0 0 10px #ffd700';
+      card.addEventListener('click', ()=>flipCard(card));
+      game.appendChild(card);
+      cards.push(card);
     }
   }
 }
 
-// Start the game on load
-newGame();
+function flipCard(card){
+  if(lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+  card.classList.add('flipped');
+  card.querySelector('.card-inner').style.display='flex';
+  card.querySelector('.card-back').style.display='none';
+
+  if(!first){ first=card; }
+  else{ second=card; lock=true; setTimeout(checkMatch,600); }
+}
+
+function checkMatch(){
+  if(first.dataset.value === second.dataset.value){
+    first.classList.add('matched'); second.classList.add('matched'); score+=10;
+  } else {
+    first.classList.remove('flipped'); second.classList.remove('flipped'); 
+    first.querySelector('.card-inner').style.display='none';
+    first.querySelector('.card-back').style.display='block';
+    second.querySelector('.card-inner').style.display='none';
+    second.querySelector('.card-back').style.display='block';
+    score=Math.max(0,score-2);
+  }
+  document.getElementById('score').textContent = score;
+  first=second=null; lock=false;
+
+  if(cards.every(c=>c.classList.contains('matched'))){
+    if(score>record){
+      record=score;
+      localStorage.setItem('flowerRecord',record);
+      document.getElementById('record').textContent=record;
+    }
+  }
+}
+
+// Start game on page load
+startGame();
 </script>
+
 </body>
 </html>
